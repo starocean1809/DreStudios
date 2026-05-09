@@ -48,7 +48,8 @@ def create_product():
         price=data['price'],
         description=data.get('description'),
         images=data.get('images', []),
-        featured=data.get('featured', False)
+        featured=data.get('featured', False),
+        stock_count=data.get('stock_count', 0)
     )
     db.session.add(product)
     db.session.commit()
@@ -66,6 +67,7 @@ def update_product(id):
     product.description = data.get('description', product.description)
     product.images = data.get('images', product.images)
     product.featured = data.get('featured', product.featured)
+    product.stock_count = data.get('stock_count', product.stock_count)
     
     db.session.commit()
     return jsonify(product.to_dict()), 200

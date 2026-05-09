@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import {
   LayoutGrid, Palette, GraduationCap, Shirt, Wrench,
   Flower2, Hammer, Home, ChevronLeft, ChevronRight, Package,
-  ShoppingBag, Shield, User, ShoppingCart
+  ShoppingBag, Shield, User, ShoppingCart, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -95,50 +95,65 @@ export default function Sidebar({ collapsed, onToggle }) {
       <div className="flex-1 overflow-y-auto py-4 space-y-6 no-scrollbar">
         {/* Main Navigation */}
         <div className="space-y-1">
-          <NavItem 
-            icon={Home} 
-            label="Browse Shop" 
-            isActive={isStore} 
-            onClick={() => navigate('/')} 
-          />
-          <NavItem 
-            icon={ShoppingBag} 
-            label="My Orders" 
-            isActive={location.pathname === '/orders'} 
-            onClick={() => navigate('/orders')} 
-          />
-          <NavItem 
-            icon={ShoppingCart} 
-            label="My Cart" 
-            isActive={location.pathname === '/cart'} 
-            onClick={() => navigate('/cart')} 
-          />
-          {user?.is_admin && (
-            <NavItem 
-              icon={Shield} 
-              label="Admin Panel" 
-              isActive={location.pathname === '/admin'} 
-              onClick={() => navigate('/admin')} 
-              colorClass="text-primary"
-            />
+          {user?.is_admin ? (
+            <>
+              <NavItem 
+                icon={Shield} 
+                label="Products Details" 
+                isActive={location.pathname === '/admin'} 
+                onClick={() => navigate('/admin')} 
+                colorClass="text-primary font-bold"
+              />
+              <NavItem 
+                icon={Clock} 
+                label="Order Requests" 
+                isActive={location.pathname === '/admin/orders'} 
+                onClick={() => navigate('/admin/orders')} 
+                colorClass="text-primary font-bold"
+              />
+              <NavItem 
+                icon={User} 
+                label="My Profile" 
+                isActive={location.pathname === '/profile'} 
+                onClick={() => navigate('/profile')} 
+              />
+              <NavItem 
+                icon={Home} 
+                label="All Categories" 
+                isActive={isStore} 
+                onClick={() => navigate('/')} 
+              />
+            </>
+          ) : (
+            <>
+              <NavItem 
+                icon={Home} 
+                label="All Categories" 
+                isActive={isStore} 
+                onClick={() => navigate('/')} 
+              />
+              <NavItem 
+                icon={ShoppingBag} 
+                label="My Orders" 
+                isActive={location.pathname === '/orders'} 
+                onClick={() => navigate('/orders')} 
+              />
+              <NavItem 
+                icon={ShoppingCart} 
+                label="My Cart" 
+                isActive={location.pathname === '/cart'} 
+                onClick={() => navigate('/cart')} 
+              />
+              <NavItem 
+                icon={User} 
+                label="My Profile" 
+                isActive={location.pathname === '/profile'} 
+                onClick={() => navigate('/profile')} 
+              />
+            </>
           )}
         </div>
 
-        {/* Categories (Only if in store) */}
-        {isStore && (
-          <div className="space-y-1 pt-4 border-t border-white/30">
-            {!collapsed && <p className="px-5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Categories</p>}
-            {categories.map((cat) => (
-              <NavItem
-                key={cat.id}
-                icon={cat.icon}
-                label={cat.label}
-                isActive={activeCategory === cat.id}
-                onClick={() => handleCategoryClick(cat.id)}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Toggle button */}

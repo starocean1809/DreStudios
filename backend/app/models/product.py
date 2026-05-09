@@ -10,6 +10,7 @@ class Product(db.Model):
     description = db.Column(db.Text)
     images = db.Column(db.JSON) # List of image URLs
     featured = db.Column(db.Boolean, default=False)
+    stock_count = db.Column(db.Integer, default=0)
     
     def to_dict(self):
         return {
@@ -19,5 +20,6 @@ class Product(db.Model):
             'price': self.price,
             'description': self.description,
             'images': self.images,
-            'featured': self.featured
+            'featured': self.featured,
+            'stock_count': self.stock_count
         }

@@ -12,8 +12,9 @@ class Order(db.Model):
     shipping_address = db.Column(db.String(500))
     city = db.Column(db.String(100))
     zip_code = db.Column(db.String(20))
+    quantity = db.Column(db.Integer, default=1)
     
-    product = db.relationship('Product', backref='ordered_in')
+    product = db.relationship('Product', backref=db.backref('ordered_in', cascade='all, delete-orphan'))
     milestones = db.relationship('OrderMilestone', backref='order', order_by='OrderMilestone.id', lazy='dynamic', cascade='all, delete-orphan')
 
     def to_dict(self):
@@ -31,6 +32,7 @@ class Order(db.Model):
             'shipping_address': self.shipping_address,
             'city': self.city,
             'zip_code': self.zip_code,
+            'quantity': self.quantity,
             'milestones': sorted([m.to_dict() for m in self.milestones], key=lambda x: x['id'])
         }
 

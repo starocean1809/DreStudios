@@ -9,6 +9,10 @@ class User(db.Model):
     phone = db.Column(db.String(20), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    address = db.Column(db.String(255))
+    city = db.Column(db.String(100))
+    zip_code = db.Column(db.String(20))
+    profile_image = db.Column(db.Text)
     
     orders = db.relationship('Order', backref='customer', lazy='dynamic')
 
@@ -23,5 +27,9 @@ class User(db.Model):
             'id': self.id,
             'email': self.email,
             'phone': self.phone,
-            'is_admin': self.is_admin
+            'is_admin': self.is_admin,
+            'address': self.address,
+            'city': self.city,
+            'zip_code': self.zip_code,
+            'profile_image': self.profile_image
         }

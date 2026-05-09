@@ -4,11 +4,16 @@ import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, Inbox, MapPin, 
 import { Cart, Orders } from '@/api/entities';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
+import Footer from '@/components/Footer';
+import OrderSuccessAnimation from '@/components/OrderSuccessAnimation';
 
 export default function CartPage() {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
   const [step, setStep] = useState(1); // 1: List, 2: Address
   const [address, setAddress] = useState({
     shipping_address: '',
@@ -20,7 +25,14 @@ export default function CartPage() {
 
   useEffect(() => {
     fetchCart();
-  }, []);
+    if (user) {
+      setAddress({
+        shipping_address: user.address || '',
+        city: user.city || '',
+        zip_code: user.zip_code || ''
+      });
+    }
+  }, [user]);
 
   const fetchCart = async () => {
     try {
@@ -70,7 +82,8 @@ export default function CartPage() {
         await Orders.create(item.product.id, address);
       }
       await Cart.clear();
-      navigate('/orders');
+      setOrderSuccess(true);
+      setTimeout(() => navigate('/orders'), 3000);
     } catch (err) {
       alert('Checkout failed: ' + err.message);
     } finally {
@@ -118,13 +131,25 @@ export default function CartPage() {
                   <motion.div key="list" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-4">
                     {items.map((item, idx) => (
                       <motion.div key={item.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }} className="glass p-5 rounded-3xl border border-white/60 shadow-sm flex items-center gap-5 hover:shadow-md transition-all">
-                        <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white/50 flex-shrink-0">
-                          <img src={item.product.images?.[0]} className="w-full h-full object-cover" />
+                        <div 
+                          onClick={() => navigate(`/product/${item.product.id}`)}
+                          className="w-24 h-24 rounded-2xl overflow-hidden bg-white/50 flex-shrink-0 cursor-pointer group/img"
+                        >
+                          <img 
+                            src={typeof item.product.images?.[0] === 'object' ? item.product.images[0].url : item.product.images?.[0]} 
+                            className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" 
+                            onError={e => { e.target.src = 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=400&q=80'; }}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">{item.product.category}</span>
-                          <h3 className="font-bold text-lg text-foreground truncate h-6">{item.product.title}</h3>
-                          <p className="text-xs text-muted-foreground font-bold">₹{item.product.price.toFixed(2)} unit info</p>
+                          <div 
+                            onClick={() => navigate(`/product/${item.product.id}`)}
+                            className="cursor-pointer group/text"
+                          >
+                            <span className="text-[10px] font-black uppercase tracking-widest text-primary/60 group-hover/text:text-primary transition-colors">{item.product.category}</span>
+                            <h3 className="font-bold text-lg text-foreground truncate h-6 group-hover/text:text-primary transition-colors">{item.product.title}</h3>
+                          </div>
+                          <p className="text-xs text-muted-foreground font-bold mt-1">₹{item.product.price.toFixed(2)} / unit</p>
                           
                           <div className="flex items-center gap-4 mt-3">
                             <div className="flex items-center bg-white/40 border border-white/70 rounded-xl p-0.5 shadow-sm">
@@ -247,6 +272,10 @@ export default function CartPage() {
           </div>
         )}
       </div>
+      <Footer />
+      <AnimatePresence>
+        {orderSuccess && <OrderSuccessAnimation />}
+      </AnimatePresence>
     </div>
   );
 }

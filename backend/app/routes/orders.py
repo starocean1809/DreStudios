@@ -13,13 +13,24 @@ def create_order():
     user_id = int(get_jwt_identity())
     data = request.get_json()
     
+    product_id = int(data['product_id'])
+    quantity = int(data.get('quantity', 1))
+    
+    from app.models.product import Product
+    product = Product.query.get_or_404(product_id)
+    
+    if product.stock_count < quantity:
+        return jsonify({'msg': f'Insufficient stock. Only {product.stock_count} units left.'}), 400
+        
     order = Order(
         user_id=user_id,
-        product_id=int(data['product_id']),
+        product_id=product_id,
+        quantity=quantity,
         shipping_address=data.get('shipping_address'),
         city=data.get('city'),
         zip_code=data.get('zip_code')
     )
+    product.stock_count -= quantity
     db.session.add(order)
     db.session.flush() # Get order ID
     
@@ -80,6 +91,15 @@ def update_milestone(id, m_id):
     elif not milestone.completed:
         milestone.completed_at = None
         
+    # Cascade completion to previous milestones if this one is being completed
+    order = Order.query.get(id)
+    if milestone.completed:
+        current_step = milestone.step_order
+        for m in order.milestones:
+            if m.step_order < current_step and not m.completed:
+                m.completed = True
+                m.completed_at = milestone.completed_at
+    
     db.session.flush() # Force save so the query below sees the changes
         
     # Update order status based on completed milestones

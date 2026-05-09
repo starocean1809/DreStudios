@@ -62,45 +62,6 @@ export default function Header() {
       {/* Controls */}
       <div className="flex items-center gap-3 flex-shrink-0">
         {/* State specific controls */}
-        {isStore && (
-          <div className="flex items-center gap-2 mr-2">
-            <div className="flex items-center bg-white/50 border border-white/60 rounded-lg p-0.5">
-              <button
-                onClick={() => updateParam('view', 'grid')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-primary text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-              >
-                <LayoutGrid size={15} />
-              </button>
-              <button
-                onClick={() => updateParam('view', 'list')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-primary text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-              >
-                <List size={15} />
-              </button>
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-white/50 border border-white/60 rounded-lg hover:bg-white/70 transition-all text-foreground/80">
-                  <span className="hidden sm:inline text-xs font-semibold uppercase tracking-tight">{currentSort.label}</span>
-                  <ChevronDown size={13} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass-strong border-white/60 shadow-lg min-w-[170px]">
-                {sortOptions.map(opt => (
-                  <DropdownMenuItem
-                    key={opt.value}
-                    onClick={() => updateParam('sort', opt.value)}
-                    className={`text-sm cursor-pointer ${sortBy === opt.value ? 'text-primary font-medium' : ''}`}
-                  >
-                    {opt.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-
         {/* Cart Button */}
         {user && (
           <button 
@@ -132,6 +93,9 @@ export default function Header() {
                   <p className="text-[10px] text-muted-foreground font-normal">{user.phone}</p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-white/40 my-2" />
+                <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer gap-2.5">
+                  <User size={15} className="text-primary" /> My Profile
+                </DropdownMenuItem>
                 {user.is_admin && (
                   <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer gap-2.5">
                     <Shield size={15} className="text-primary" /> Admin Panel

@@ -35,6 +35,27 @@ export const Query = {
     const data = await response.json();
     if (!response.ok) throw new Error(data.msg || 'Failed to create product');
     return data;
+  },
+
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to delete product');
+    return data;
+  },
+
+  update: async (id, productData) => {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(productData)
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to update product');
+    return data;
   }
 };
 
@@ -78,6 +99,17 @@ export const Auth = {
       return null;
     }
     return await response.json();
+  },
+
+  updateProfile: async (profileData) => {
+    const response = await fetch(`${API_URL}/auth/profile`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(profileData)
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to update profile');
+    return data;
   }
 };
 
@@ -176,5 +208,24 @@ export const Cart = {
     });
     if (!response.ok) throw new Error('Failed to clear cart');
     return await response.json();
+  }
+};
+
+export const Reviews = {
+  list: async (productId) => {
+    const response = await fetch(`${API_URL}/reviews/product/${productId}`);
+    if (!response.ok) throw new Error('Failed to fetch reviews');
+    return await response.json();
+  },
+  
+  create: async (reviewData) => {
+    const response = await fetch(`${API_URL}/reviews`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(reviewData)
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to submit review');
+    return data;
   }
 };

@@ -54,3 +54,38 @@ def get_me():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
     return jsonify(user.to_dict()), 200
+
+@bp.route('/profile', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    data = request.get_json()
+    
+    if not user:
+        return jsonify({'msg': 'User not found'}), 404
+        
+    if 'email' in data:
+        # Check if email is already taken by another user
+        existing = User.query.filter_by(email=data['email']).first()
+        if existing and str(existing.id) != user_id:
+            return jsonify({'msg': 'Email already in use'}), 400
+        user.email = data['email']
+        
+    if 'phone' in data:
+        existing = User.query.filter_by(phone=data['phone']).first()
+        if existing and str(existing.id) != user_id:
+            return jsonify({'msg': 'Phone number already in use'}), 400
+        user.phone = data['phone']
+        
+    if 'address' in data:
+        user.address = data['address']
+    if 'city' in data:
+        user.city = data['city']
+    if 'zip_code' in data:
+        user.zip_code = data['zip_code']
+    if 'profile_image' in data:
+        user.profile_image = data['profile_image']
+        
+    db.session.commit()
+    return jsonify(user.to_dict()), 200

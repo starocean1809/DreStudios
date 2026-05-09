@@ -7,6 +7,9 @@ import Register from '@/pages/Register';
 import AdminDashboard from '@/pages/AdminDashboard';
 import UserOrders from '@/pages/UserOrders';
 import CartPage from '@/pages/Cart';
+import ProductDetails from '@/pages/ProductDetails';
+import Profile from '@/pages/Profile';
+import AdminOrders from '@/pages/AdminOrders';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 
@@ -54,6 +57,14 @@ export default function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/product/:id" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ProductDetails />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
           <Route path="/orders" element={
             <ProtectedRoute>
               <MainLayout>
@@ -70,10 +81,26 @@ export default function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Profile />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
           <Route path="/admin" element={
             <ProtectedRoute adminOnly>
               <MainLayout>
                 <AdminDashboard />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/orders" element={
+            <ProtectedRoute adminOnly>
+              <MainLayout>
+                <AdminOrders />
               </MainLayout>
             </ProtectedRoute>
           } />

@@ -22,11 +22,13 @@ def create_app(config_class=Config):
     from app.models.product import Product
     from app.models.order import Order, OrderMilestone
     from app.models.cart import CartItem
+    from app.models.review import Review
 
-    from app.routes import auth, products, orders, cart
+    from app.routes import auth, products, orders, cart, reviews
     app.register_blueprint(auth.bp, url_prefix='/api/auth')
     app.register_blueprint(products.bp, url_prefix='/api/products')
     app.register_blueprint(orders.bp, url_prefix='/api/orders')
     app.register_blueprint(cart.bp, url_prefix='/api/cart')
+    app.register_blueprint(reviews.bp, url_prefix='/api/reviews')
 
     return app

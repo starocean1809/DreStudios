@@ -1,17 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Package, Clock, CheckCircle2, ChevronRight, Inbox } from 'lucide-react';
-import { Orders } from '@/api/entities';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Package, 
+  Clock, 
+  CheckCircle2, 
+  ChevronRight, 
+  Inbox, 
+  Truck, 
+  Box, 
+  MapPin, 
+  Calendar,
+  AlertCircle,
+  ShoppingBag as ShoppingBagIcon,
+  Star,
+  X
+} from 'lucide-react';
+import { Orders, Reviews } from '@/api/entities';
 import { cn } from '@/lib/utils';
+
+const StepIcon = ({ label, completed, active }) => {
+  switch (label) {
+    case 'Received': return <Box size={16} />;
+    case 'Preparing': return <Clock size={16} />;
+    case 'Printing': return <Package size={16} />;
+    case 'Quality Check': return <CheckCircle2 size={16} />;
+    case 'Shipped': return <Truck size={16} />;
+    default: return <Box size={16} />;
+  }
+};
 
 export default function UserOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('active'); // 'active' or 'completed'
+  const [selectedReviewOrder, setSelectedReviewOrder] = useState(null);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
-    // Auto-update every 5 seconds for "instant" feel
-    const interval = setInterval(fetchOrders, 5000);
+    const interval = setInterval(fetchOrders, 10000); // Check every 10s
     return () => clearInterval(interval);
   }, []);
 
@@ -26,109 +56,352 @@ export default function UserOrders() {
     }
   };
 
-  if (loading) return null;
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedReviewOrder) return;
+    
+    setIsSubmittingReview(true);
+    try {
+      await Reviews.create({
+        product_id: selectedReviewOrder.product.id,
+        rating: reviewForm.rating,
+        comment: reviewForm.comment
+      });
+      setSelectedReviewOrder(null);
+      setReviewForm({ rating: 5, comment: '' });
+      alert('Review submitted successfully!');
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  const filteredOrders = orders.filter(o => 
+    activeTab === 'active' ? o.status !== 'completed' : o.status === 'completed'
+  );
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-[#fafbff]">
+        <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 overflow-auto bg-[#fafbff] p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <Package className="text-primary w-8 h-8" />
-          </div>
+    <div className="flex-1 overflow-auto bg-[#fafbff] p-4 md:p-8">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">My Orders</h1>
-            <p className="text-muted-foreground">Track your 3D print progress</p>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">My Orders</h1>
+            <p className="text-muted-foreground font-medium mt-1">Track the progress of your custom 3D prints</p>
+          </div>
+          
+          {/* Tab Switcher */}
+          <div className="flex p-1 bg-white border border-slate-100 rounded-2xl shadow-sm self-start md:self-auto">
+            <button
+              onClick={() => setActiveTab('active')}
+              className={cn(
+                "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                activeTab === 'active' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-400 hover:text-slate-600"
+              )}
+            >
+              Active Prints
+            </button>
+            <button
+              onClick={() => setActiveTab('completed')}
+              className={cn(
+                "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                activeTab === 'completed' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-400 hover:text-slate-600"
+              )}
+            >
+              Completed
+            </button>
           </div>
         </div>
 
-        {orders.length === 0 ? (
-          <div className="glass h-64 rounded-3xl flex flex-col items-center justify-center text-muted-foreground border-dashed border-2">
-            <Inbox size={48} className="mb-4 opacity-10" />
-            <p className="text-lg font-medium">No orders yet</p>
-            <p className="text-sm">Browse our store to start your first 3D print!</p>
-          </div>
-        ) : (
-          <div className="space-y-12">
-            {orders.map((order, idx) => (
+        <AnimatePresence mode="wait">
+          {filteredOrders.length === 0 ? (
+            <motion.div 
+              key={`${activeTab}-empty`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="glass h-80 rounded-[40px] flex flex-col items-center justify-center text-muted-foreground border-dashed border-2 border-slate-200 bg-white/40"
+            >
+              <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center mb-6 opacity-20">
+                <Inbox size={40} />
+              </div>
+              <p className="text-lg font-black text-slate-400 uppercase tracking-[0.2em]">
+                {activeTab === 'active' ? "No active prints" : "No completed orders"}
+              </p>
+              <p className="text-xs font-bold text-slate-400 mt-2">
+                {activeTab === 'active' ? "Start your next project today" : "Your finished masterpieces will appear here"}
+              </p>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key={`${activeTab}-list`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-8"
+            >
+              {filteredOrders.map((order, idx) => (
               <motion.div
                 key={order.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="glass-strong p-8 rounded-[2rem] border border-white/60 shadow-xl overflow-hidden relative"
+                className="glass-strong rounded-[40px] border border-white/60 shadow-2xl overflow-hidden bg-white/80"
               >
-                {/* Background Accent */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-
-                <div className="flex flex-col md:flex-row gap-10">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-8">
-                      <div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full mb-3 inline-block">
-                          Status: {order.status}
+                {/* Order Summary Header */}
+                <div className="p-6 md:p-8 bg-slate-50/50 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex items-center gap-5">
+                    <div className="w-16 h-16 rounded-2xl bg-white shadow-xl border border-slate-100 flex items-center justify-center text-primary relative flex-shrink-0">
+                      <ShoppingBag size={24} />
+                      <div className="absolute -top-2 -right-2 px-2 py-1 rounded-lg bg-primary text-white text-[9px] font-black shadow-lg">
+                        #{order.id.toString().padStart(4, '0')}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-xl font-black text-slate-900 truncate max-w-[200px] md:max-w-md">
+                          {order.product?.title || '3D Print Request'}
+                        </h3>
+                        {order.quantity > 1 && (
+                          <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest flex-shrink-0">
+                            ×{order.quantity}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 mt-1">
+                        <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <Calendar size={12} /> {new Date(order.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
                         </span>
-                        <h3 className="text-2xl font-bold text-foreground">{order.product?.title || '3D Print Order'}</h3>
-                        <p className="text-sm text-muted-foreground">Placed on {new Date(order.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground mb-1 uppercase font-bold tracking-tighter">Total Price</p>
-                        <p className="text-2xl font-black text-foreground">₹{order.product?.price?.toFixed(2) || '29.99'}</p>
+                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                        <span className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-widest">
+                          <MapPin size={12} /> {order.city}
+                        </span>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Shipping Address */}
-                    <div className="bg-white/30 rounded-2xl p-4 border border-white/40 mb-8 flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                        <Package size={16} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Shipping To</p>
-                        <p className="text-sm font-bold text-foreground">
-                          {order.shipping_address}, {order.city} {order.zip_code}
+                  <div className="flex items-center justify-between md:justify-end gap-10 md:gap-16 border-t md:border-t-0 pt-4 md:pt-0 border-slate-200/50">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Final Total</p>
+                      <p className="text-2xl font-black text-slate-900">
+                        ₹{((order.product?.price || 0) * (order.quantity || 1)).toLocaleString()}
+                      </p>
+                      {order.quantity > 1 && (
+                        <p className="text-[9px] font-bold text-slate-400 mt-0.5">
+                          ₹{order.product?.price?.toLocaleString()} × {order.quantity} units
                         </p>
-                      </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Current Status</p>
+                      <span className={cn(
+                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                        order.status === 'completed' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                        order.status === 'shipped' ? "bg-blue-50 text-blue-600 border-blue-100" :
+                        "bg-primary/5 text-primary border-primary/10"
+                      )}>
+                        {order.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tracking Visualizer (Flipkart Style) */}
+                <div className="p-8 md:p-12">
+                  <div className="relative">
+                    {/* Connecting Line Background */}
+                    <div className="absolute top-[18px] left-[40px] right-[40px] h-1 bg-slate-100 rounded-full overflow-hidden hidden md:block">
+                      {/* Active Progress Line */}
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ 
+                          width: `${(order.milestones.filter(m => m.completed).length - 1) / (order.milestones.length - 1) * 100}%` 
+                        }}
+                        className="h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                      />
                     </div>
 
-                    <div className="space-y-8 relative pl-1">
-                      <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-muted/20" />
-                      {order.milestones.map((m) => (
-                        <div key={m.id} className="relative flex gap-6">
-                          <div className={cn(
-                            "w-8 h-8 rounded-full border-2 flex-shrink-0 z-10 transition-all flex items-center justify-center",
-                            m.completed 
-                              ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" 
-                              : "bg-white border-muted/20 text-muted/40"
-                          )}>
-                            <CheckCircle2 size={16} />
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center relative z-10 gap-8 md:gap-4">
+                      {order.milestones.map((m, mIdx) => {
+                        const isCompleted = m.completed;
+                        const isCurrent = mIdx === order.milestones.filter(x => x.completed).length - 1;
+                        const isNext = mIdx === order.milestones.filter(x => x.completed).length;
+
+                        return (
+                          <div key={m.id} className="flex flex-row md:flex-col items-center gap-4 md:gap-4 flex-1">
+                            {/* Circle Node */}
+                            <div className="relative">
+                              <motion.div
+                                animate={isCurrent ? { scale: [1, 1.1, 1] } : {}}
+                                transition={{ duration: 2, repeat: Infinity }}
+                                className={cn(
+                                  "w-10 h-10 rounded-full border-4 flex items-center justify-center transition-all duration-500",
+                                  isCompleted ? "bg-emerald-500 border-emerald-100 text-white shadow-lg shadow-emerald-500/20" : 
+                                  isNext ? "bg-white border-primary/40 text-primary animate-pulse" :
+                                  "bg-white border-slate-100 text-slate-300"
+                                )}
+                              >
+                                {isCompleted ? <CheckCircle2 size={18} /> : <StepIcon label={m.label} />}
+                              </motion.div>
+                              
+                              {/* Mobile Vertical Line */}
+                              {mIdx < order.milestones.length - 1 && (
+                                <div className="absolute top-10 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-slate-100 md:hidden">
+                                  {isCompleted && <div className="w-full h-full bg-emerald-500" />}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Labels */}
+                            <div className="text-left md:text-center">
+                              <p className={cn(
+                                "text-[11px] font-black uppercase tracking-widest transition-colors",
+                                isCompleted ? "text-slate-900" : isNext ? "text-primary" : "text-slate-300"
+                              )}>
+                                {m.label}
+                              </p>
+                              <p className="text-[9px] font-bold text-slate-400 mt-0.5 leading-tight max-w-[120px] hidden md:block">
+                                {m.description}
+                              </p>
+                              {isCompleted && m.completed_at && (
+                                <p className="text-[8px] font-black text-emerald-500 uppercase mt-1">
+                                  {new Date(m.completed_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className={cn("text-base font-bold", m.completed ? "text-foreground" : "text-muted-foreground/50")}>{m.label}</p>
-                            <p className="text-xs text-muted-foreground leading-tight max-w-sm">{m.description}</p>
-                            {m.completed_at && (
-                              <p className="text-[10px] text-primary/70 font-semibold mt-1">Confirmed at {new Date(m.completed_at).toLocaleTimeString()}</p>
-                            )}
-                          </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Detail Footer */}
+                <div className="p-6 bg-slate-50/30 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-6">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white shadow-sm flex-shrink-0">
+                    <img 
+                      src={typeof order.product?.images?.[0] === 'object' ? order.product.images[0].url : (order.product?.images?.[0] || 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=600&q=80')} 
+                      className="w-full h-full object-cover" 
+                      onError={e => { e.target.src = 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=600&q=80'; }}
+                    />
+                  </div>
+                  <div className="flex-1 text-center sm:text-left">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Product Details</p>
+                    <h4 className="text-sm font-black text-slate-900">{order.product?.title}</h4>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">{order.product?.description || 'Premium 3D printed model.'}</p>
+                  </div>
+                  <div className="flex gap-3">
+                    {order.status === 'completed' && (
+                      <button 
+                        onClick={() => setSelectedReviewOrder(order)}
+                        className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/20"
+                      >
+                        <Star size={14} fill="currentColor" /> Rate & Review
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => navigate(`/product/${order.product?.id}`)}
+                      className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:text-primary hover:border-primary/20 transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
+                    >
+                      View Product <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Review Modal */}
+        <AnimatePresence>
+          {selectedReviewOrder && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden"
+              >
+                <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-900">Write a Review</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                      For {selectedReviewOrder.product?.title}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedReviewOrder(null)}
+                    className="p-3 rounded-2xl hover:bg-slate-50 text-slate-400 transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleReviewSubmit} className="p-8 space-y-8">
+                  {/* Star Rating */}
+                  <div className="flex flex-col items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">How was your experience?</p>
+                    <div className="flex gap-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                          className="transition-all hover:scale-125"
+                        >
+                          <Star 
+                            size={32} 
+                            className={cn(
+                              "transition-colors",
+                              star <= reviewForm.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-200"
+                            )} 
+                          />
+                        </button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="md:w-64 flex flex-col gap-4">
-                    <div className="aspect-square rounded-2xl bg-white/50 border border-white/60 p-2 overflow-hidden">
-                       <img src={order.product?.images?.[0] || 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=600&q=80'} className="w-full h-full object-cover rounded-xl" />
-                    </div>
-                    <div className="glass p-4 rounded-2xl border border-white/40">
-                      <p className="text-xs font-bold text-muted-foreground mb-1">Product Details</p>
-                      <p className="text-sm font-bold text-foreground">{order.product?.title}</p>
-                      <p className="text-[11px] text-muted-foreground">{order.product?.description || 'Premium 3D printed model.'}</p>
-                    </div>
+                  {/* Comment */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Your Feedback</label>
+                    <textarea
+                      required
+                      placeholder="Once the product is delivered by courier, write your review for that product..."
+                      className="w-full bg-slate-50 border border-slate-100 rounded-[32px] p-6 text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary focus:outline-none min-h-[150px] resize-none transition-all"
+                      value={reviewForm.comment}
+                      onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                    />
                   </div>
-                </div>
+
+                  <button
+                    disabled={isSubmittingReview}
+                    type="submit"
+                    className="w-full h-16 rounded-[24px] bg-primary text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
+                  >
+                    {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                  </button>
+                </form>
               </motion.div>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
+
+// Re-using local ShoppingBag since it's common
+const ShoppingBag = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+  </svg>
+);

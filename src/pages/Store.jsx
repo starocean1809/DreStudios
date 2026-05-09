@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '@/components/ProductCard';
-import ProductModal from '@/components/ProductModal';
 import EmptyState from '@/components/EmptyState';
 import Footer from '@/components/Footer';
 import { Query } from '@/api/entities';
@@ -11,7 +10,6 @@ export default function Store() {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Sync with URL params
   const activeCategory = searchParams.get('category') || 'All Products';
@@ -62,7 +60,6 @@ export default function Store() {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    onClick={setSelectedProduct}
                   />
                 ))}
               </motion.div>
@@ -78,8 +75,6 @@ export default function Store() {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    onClick={setSelectedProduct}
-                    listMode
                   />
                 ))}
               </motion.div>
@@ -87,13 +82,6 @@ export default function Store() {
           </AnimatePresence>
         )}
       </main>
-
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
       
       <Footer />
     </>
