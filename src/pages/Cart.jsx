@@ -49,6 +49,7 @@ export default function CartPage() {
     try {
       await Cart.update(id, newQty);
       fetchCart();
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       alert(err.message);
     }
@@ -58,6 +59,7 @@ export default function CartPage() {
     try {
       await Cart.remove(id);
       fetchCart();
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       alert(err.message);
     }
@@ -82,6 +84,7 @@ export default function CartPage() {
         await Orders.create(item.product.id, address);
       }
       await Cart.clear();
+      window.dispatchEvent(new Event('cartUpdated'));
       setOrderSuccess(true);
       setTimeout(() => navigate('/orders'), 3000);
     } catch (err) {

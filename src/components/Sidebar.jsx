@@ -5,11 +5,11 @@ import { useAuth } from '@/lib/AuthContext';
 import {
   LayoutGrid, Palette, GraduationCap, Shirt, Wrench,
   Flower2, Hammer, Home, ChevronLeft, ChevronRight, Package,
-  ShoppingBag, Shield, User, ShoppingCart, Clock
+  ShoppingBag, Shield, User, ShoppingCart, Clock, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const categories = [
+export const categories = [
   { id: 'All Products', label: 'All Products', icon: LayoutGrid },
   { id: 'Art', label: 'Art', icon: Palette },
   { id: 'Education', label: 'Education', icon: GraduationCap },
@@ -98,10 +98,17 @@ export default function Sidebar({ collapsed, onToggle }) {
           {user?.is_admin ? (
             <>
               <NavItem 
-                icon={Shield} 
-                label="Products Details" 
+                icon={BarChart3} 
+                label="Dashboard" 
                 isActive={location.pathname === '/admin'} 
                 onClick={() => navigate('/admin')} 
+                colorClass="text-primary font-bold"
+              />
+              <NavItem 
+                icon={Shield} 
+                label="Products Details" 
+                isActive={location.pathname === '/admin/products'} 
+                onClick={() => navigate('/admin/products')} 
                 colorClass="text-primary font-bold"
               />
               <NavItem 

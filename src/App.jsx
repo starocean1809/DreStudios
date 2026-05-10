@@ -4,7 +4,9 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import Store from '@/pages/Store';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import ResetPassword from '@/pages/ResetPassword';
 import AdminDashboard from '@/pages/AdminDashboard';
+import AdminAnalytics from '@/pages/AdminAnalytics';
 import UserOrders from '@/pages/UserOrders';
 import CartPage from '@/pages/Cart';
 import ProductDetails from '@/pages/ProductDetails';
@@ -48,6 +50,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           <Route path="/" element={
             <ProtectedRoute>
@@ -90,6 +93,14 @@ export default function App() {
           } />
 
           <Route path="/admin" element={
+            <ProtectedRoute adminOnly>
+              <MainLayout>
+                <AdminAnalytics />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/products" element={
             <ProtectedRoute adminOnly>
               <MainLayout>
                 <AdminDashboard />

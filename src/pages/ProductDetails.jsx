@@ -111,6 +111,7 @@ export default function ProductDetails() {
   const handleAddToCart = async () => {
     try {
       await Cart.add(product.id, quantity);
+      window.dispatchEvent(new Event('cartUpdated'));
       setAddToCartSuccess(true);
       setTimeout(() => navigate('/cart'), 1500);
     } catch (err) {

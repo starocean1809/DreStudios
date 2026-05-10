@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import ProductCard from '@/components/ProductCard';
 import EmptyState from '@/components/EmptyState';
 import Footer from '@/components/Footer';
 import { Query } from '@/api/entities';
+import { categories } from '@/components/Sidebar';
+import { cn } from '@/lib/utils';
 
 export default function Store() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,9 +40,43 @@ export default function Store() {
     fetchProducts();
   }, [fetchProducts]);
 
+  const handleCategoryClick = (catId) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (catId === 'All Products') {
+      newParams.delete('category');
+    } else {
+      newParams.set('category', catId);
+    }
+    navigate(`/?${newParams.toString()}`);
+  };
+
   return (
     <>
       <main className="flex-1 overflow-y-auto px-6 py-6 pei-grid-bg">
+        
+        {/* Category Filter Bar */}
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-6 mb-2 border-b border-white/40">
+          {categories.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = activeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryClick(cat.id)}
+                className={cn(
+                  "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-black uppercase tracking-widest whitespace-nowrap transition-all flex-shrink-0 shadow-sm border",
+                  isActive 
+                    ? "bg-primary text-white border-primary shadow-primary/20 scale-105" 
+                    : "bg-white/60 text-slate-500 hover:bg-white/90 border-white/70 hover:text-primary hover:border-primary/20"
+                )}
+              >
+                <Icon size={16} />
+                {cat.label}
+              </button>
+            );
+          })}
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-32">
             <div className="w-8 h-8 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />

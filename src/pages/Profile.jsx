@@ -25,11 +25,16 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     phone: '',
-    address: '',
-    city: '',
-    zip_code: '',
+    flat_no: '',
+    street_name: '',
+    area_name: '',
+    place: '',
+    district: '',
+    state: '',
+    pincode: '',
     profile_image: ''
   });
 
@@ -38,11 +43,16 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       setFormData({
+        name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        address: user.address || '',
-        city: user.city || '',
-        zip_code: user.zip_code || '',
+        flat_no: user.flat_no || '',
+        street_name: user.street_name || '',
+        area_name: user.area_name || '',
+        place: user.place || '',
+        district: user.district || '',
+        state: user.state || '',
+        pincode: user.pincode || '',
         profile_image: user.profile_image || ''
       });
     }
@@ -109,9 +119,9 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Summary Card */}
-          <div className="lg:col-span-4 space-y-6">
+        <div className="flex flex-col gap-8 w-full">
+          {/* Top Section: Summary Card */}
+          <div className="w-full space-y-6">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -144,7 +154,7 @@ export default function Profile() {
               </div>
 
               <div className="mt-6">
-                <h2 className="text-2xl font-black text-foreground truncate max-w-[200px]">{user.email.split('@')[0]}</h2>
+                <h2 className="text-2xl font-black text-foreground truncate max-w-[200px]">{user.name || user.email.split('@')[0]}</h2>
                 <div className="flex items-center justify-center gap-2 mt-2">
                   <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
                     {user.is_admin ? 'Admin' : 'Member'}
@@ -180,7 +190,24 @@ export default function Profile() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-600">Password</span>
-                  <span className="text-[10px] font-black text-primary uppercase cursor-pointer hover:underline">Change</span>
+                  <button 
+                    type="button"
+                    disabled={isSaving}
+                    onClick={async () => {
+                      try {
+                        setIsSaving(true);
+                        await Auth.requestPasswordReset(user.email);
+                        alert('Password reset link has been sent to your email.');
+                      } catch (err) {
+                        alert(err.message || 'Failed to send reset link');
+                      } finally {
+                        setIsSaving(false);
+                      }
+                    }}
+                    className="text-[10px] font-black text-primary uppercase cursor-pointer hover:underline disabled:opacity-50"
+                  >
+                    Change
+                  </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-600">Two-Factor</span>
@@ -190,8 +217,8 @@ export default function Profile() {
             </motion.div>
           </div>
 
-          {/* Right Column: Form Sections */}
-          <div className="lg:col-span-8">
+          {/* Bottom Section: Form Sections */}
+          <div className="w-full">
             <form onSubmit={handleSave} className="space-y-8">
               {/* Personal Information */}
               <motion.div 
@@ -207,23 +234,23 @@ export default function Profile() {
                   <h3 className="text-xl font-black text-foreground">Personal Information</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="flex flex-col gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
                     <div className={cn(
                       "flex items-center gap-3 p-4 rounded-2xl transition-all border",
                       isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
                     )}>
-                      <Mail size={18} className="text-primary/40" />
+                      <UserIcon size={18} className="text-primary/40" />
                       {isEditing ? (
                         <input 
-                          type="email"
+                          type="text"
                           className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground"
-                          value={formData.email}
-                          onChange={e => setFormData({...formData, email: e.target.value})}
+                          value={formData.name}
+                          onChange={e => setFormData({...formData, name: e.target.value})}
                         />
                       ) : (
-                        <p className="text-sm font-bold text-foreground">{user.email}</p>
+                        <p className="text-sm font-bold text-foreground">{user.name || 'Not provided'}</p>
                       )}
                     </div>
                   </div>
@@ -247,6 +274,26 @@ export default function Profile() {
                       )}
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+                    <div className={cn(
+                      "flex items-center gap-3 p-4 rounded-2xl transition-all border",
+                      isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
+                    )}>
+                      <Mail size={18} className="text-primary/40" />
+                      {isEditing ? (
+                        <input 
+                          type="email"
+                          className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground"
+                          value={formData.email}
+                          onChange={e => setFormData({...formData, email: e.target.value})}
+                        />
+                      ) : (
+                        <p className="text-sm font-bold text-foreground truncate">{user.email}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </motion.div>
 
@@ -265,32 +312,9 @@ export default function Profile() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Delivery Address</label>
-                    <div className={cn(
-                      "flex items-start gap-3 p-4 rounded-2xl transition-all border",
-                      isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
-                    )}>
-                      <MapPin size={18} className="text-primary/40 mt-0.5" />
-                      {isEditing ? (
-                        <textarea 
-                          rows={3}
-                          className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground resize-none"
-                          value={formData.address}
-                          onChange={e => setFormData({...formData, address: e.target.value})}
-                          placeholder="No 123, Street Name..."
-                        />
-                      ) : (
-                        <p className="text-sm font-bold text-foreground leading-relaxed">
-                          {user.address || 'No shipping address saved yet.'}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-8">
+                  <div className="flex flex-col gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">City</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Flat No / Door No</label>
                       <div className={cn(
                         "flex items-center gap-3 p-4 rounded-2xl transition-all border",
                         isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
@@ -300,18 +324,117 @@ export default function Profile() {
                           <input 
                             type="text"
                             className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground"
-                            value={formData.city}
-                            onChange={e => setFormData({...formData, city: e.target.value})}
-                            placeholder="Colombo"
+                            value={formData.flat_no}
+                            onChange={e => setFormData({...formData, flat_no: e.target.value})}
                           />
                         ) : (
-                          <p className="text-sm font-bold text-foreground">{user.city || '—'}</p>
+                          <p className="text-sm font-bold text-foreground">{user.flat_no || '—'}</p>
                         )}
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">ZIP / Post Code</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Street Name</label>
+                      <div className={cn(
+                        "flex items-center gap-3 p-4 rounded-2xl transition-all border",
+                        isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
+                      )}>
+                        <MapPin size={18} className="text-primary/40" />
+                        {isEditing ? (
+                          <input 
+                            type="text"
+                            className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground"
+                            value={formData.street_name}
+                            onChange={e => setFormData({...formData, street_name: e.target.value})}
+                          />
+                        ) : (
+                          <p className="text-sm font-bold text-foreground">{user.street_name || '—'}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Area Name</label>
+                      <div className={cn(
+                        "flex items-center gap-3 p-4 rounded-2xl transition-all border",
+                        isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
+                      )}>
+                        <MapPin size={18} className="text-primary/40" />
+                        {isEditing ? (
+                          <input 
+                            type="text"
+                            className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground"
+                            value={formData.area_name}
+                            onChange={e => setFormData({...formData, area_name: e.target.value})}
+                          />
+                        ) : (
+                          <p className="text-sm font-bold text-foreground">{user.area_name || '—'}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Place / City</label>
+                      <div className={cn(
+                        "flex items-center gap-3 p-4 rounded-2xl transition-all border",
+                        isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
+                      )}>
+                        <MapPin size={18} className="text-primary/40" />
+                        {isEditing ? (
+                          <input 
+                            type="text"
+                            className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground"
+                            value={formData.place}
+                            onChange={e => setFormData({...formData, place: e.target.value})}
+                          />
+                        ) : (
+                          <p className="text-sm font-bold text-foreground">{user.place || '—'}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">District</label>
+                      <div className={cn(
+                        "flex items-center gap-3 p-4 rounded-2xl transition-all border",
+                        isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
+                      )}>
+                        <MapPin size={18} className="text-primary/40" />
+                        {isEditing ? (
+                          <input 
+                            type="text"
+                            className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground"
+                            value={formData.district}
+                            onChange={e => setFormData({...formData, district: e.target.value})}
+                          />
+                        ) : (
+                          <p className="text-sm font-bold text-foreground">{user.district || '—'}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">State</label>
+                      <div className={cn(
+                        "flex items-center gap-3 p-4 rounded-2xl transition-all border",
+                        isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
+                      )}>
+                        <MapPin size={18} className="text-primary/40" />
+                        {isEditing ? (
+                          <input 
+                            type="text"
+                            className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground"
+                            value={formData.state}
+                            onChange={e => setFormData({...formData, state: e.target.value})}
+                          />
+                        ) : (
+                          <p className="text-sm font-bold text-foreground">{user.state || '—'}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pincode</label>
                       <div className={cn(
                         "flex items-center gap-3 p-4 rounded-2xl transition-all border",
                         isEditing ? "bg-white border-primary/20 ring-4 ring-primary/5" : "bg-slate-50/50 border-slate-100"
@@ -321,12 +444,11 @@ export default function Profile() {
                           <input 
                             type="text"
                             className="bg-transparent border-none outline-none w-full text-sm font-bold text-foreground"
-                            value={formData.zip_code}
-                            onChange={e => setFormData({...formData, zip_code: e.target.value})}
-                            placeholder="00100"
+                            value={formData.pincode}
+                            onChange={e => setFormData({...formData, pincode: e.target.value})}
                           />
                         ) : (
-                          <p className="text-sm font-bold text-foreground">{user.zip_code || '—'}</p>
+                          <p className="text-sm font-bold text-foreground">{user.pincode || '—'}</p>
                         )}
                       </div>
                     </div>

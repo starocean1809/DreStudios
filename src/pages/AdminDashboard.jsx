@@ -116,7 +116,7 @@ function AdminProductCard({ product, onEdit, onDelete }) {
   );
 }
 
-export default function AdminDashboard() {
+export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);

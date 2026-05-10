@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, LayoutGrid, List, ChevronDown, User, LogOut, Package, Shield, ShoppingCart } from 'lucide-react';
 import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { Cart } from '@/api/entities';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,31 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const isStore = location.pathname === '/';
+  
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchCartCount = async () => {
+      try {
+        const items = await Cart.list();
+        const count = items.reduce((acc, item) => acc + item.quantity, 0);
+        setCartCount(count);
+      } catch (err) {
+        console.error('Failed to fetch cart count', err);
+      }
+    };
+
+    fetchCartCount();
+
+    const handleCartUpdate = () => {
+      fetchCartCount();
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, [user]);
 
   const updateParam = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
@@ -69,6 +95,11 @@ export default function Header() {
             className="w-10 h-10 flex items-center justify-center rounded-full bg-white/60 border border-white/70 shadow-sm hover:scale-105 transition-all text-primary relative"
           >
             <ShoppingCart size={18} />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-destructive text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-sm">
+                {cartCount}
+              </span>
+            )}
           </button>
         )}
 

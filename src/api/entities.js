@@ -1,3 +1,4 @@
+// const API_URL = 'https://hari-3d-business.onrender.com/api';
 const API_URL = 'http://localhost:5000/api';
 
 const getHeaders = () => {
@@ -19,13 +20,13 @@ export const Query = {
     if (!response.ok) throw new Error('Failed to fetch products');
     return await response.json();
   },
-  
+
   get: async (id) => {
     const response = await fetch(`${API_URL}/products/${id}`);
     if (!response.ok) throw new Error('Failed to fetch product');
     return await response.json();
   },
-  
+
   create: async (productData) => {
     const response = await fetch(`${API_URL}/products`, {
       method: 'POST',
@@ -71,26 +72,70 @@ export const Auth = {
     localStorage.setItem('token', data.access_token);
     return data;
   },
-  
-  register: async (email, phone, password) => {
+
+  sendOtp: async (email) => {
+    const response = await fetch(`${API_URL}/auth/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to send OTP');
+    return data;
+  },
+
+  verifyOtp: async (email, otp) => {
+    const response = await fetch(`${API_URL}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to verify OTP');
+    return data;
+  },
+
+  requestPasswordReset: async (email) => {
+    const response = await fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to send reset link');
+    return data;
+  },
+
+  resetPassword: async (token, password) => {
+    const response = await fetch(`${API_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to reset password');
+    return data;
+  },
+
+  register: async (userData) => {
     const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, phone, password })
+      body: JSON.stringify(userData)
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.msg || 'Registration failed');
     return data;
   },
-  
+
   logout: () => {
     localStorage.removeItem('token');
   },
-  
+
   getMe: async () => {
     const token = localStorage.getItem('token');
     if (!token) return null;
-    
+
     const response = await fetch(`${API_URL}/auth/me`, {
       headers: getHeaders()
     });
@@ -118,7 +163,7 @@ export const Orders = {
     const response = await fetch(`${API_URL}/orders`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         product_id: productId,
         ...addressData
       })
@@ -127,7 +172,7 @@ export const Orders = {
     if (!response.ok) throw new Error(data.msg || 'Failed to place order');
     return data;
   },
-  
+
   list: async () => {
     const response = await fetch(`${API_URL}/orders?t=${Date.now()}`, {
       headers: getHeaders()
@@ -135,7 +180,7 @@ export const Orders = {
     if (!response.ok) throw new Error('Failed to fetch orders');
     return await response.json();
   },
-  
+
   updateMilestone: async (orderId, milestoneId, updateData) => {
     const response = await fetch(`${API_URL}/orders/${orderId}/milestone/${milestoneId}`, {
       method: 'PUT',
@@ -171,7 +216,7 @@ export const Cart = {
     if (!response.ok) throw new Error('Failed to fetch cart');
     return await response.json();
   },
-  
+
   add: async (productId, quantity = 1) => {
     const response = await fetch(`${API_URL}/cart`, {
       method: 'POST',
@@ -181,7 +226,7 @@ export const Cart = {
     if (!response.ok) throw new Error('Failed to add to cart');
     return await response.json();
   },
-  
+
   update: async (itemId, quantity) => {
     const response = await fetch(`${API_URL}/cart/${itemId}`, {
       method: 'PATCH',
@@ -191,7 +236,7 @@ export const Cart = {
     if (!response.ok) throw new Error('Failed to update cart');
     return await response.json();
   },
-  
+
   remove: async (itemId) => {
     const response = await fetch(`${API_URL}/cart/${itemId}`, {
       method: 'DELETE',
@@ -217,7 +262,7 @@ export const Reviews = {
     if (!response.ok) throw new Error('Failed to fetch reviews');
     return await response.json();
   },
-  
+
   create: async (reviewData) => {
     const response = await fetch(`${API_URL}/reviews`, {
       method: 'POST',
@@ -226,6 +271,17 @@ export const Reviews = {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.msg || 'Failed to submit review');
+    return data;
+  }
+};
+
+export const AdminStats = {
+  getOverview: async () => {
+    const response = await fetch(`${API_URL}/stats/overview`, {
+      headers: getHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to fetch stats');
     return data;
   }
 };
