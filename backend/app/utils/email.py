@@ -3,9 +3,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+SMTP_PORT = 465
 SENDER_EMAIL = "team.drestudios@gmail.com"
-SENDER_PASSWORD = "sqbk hsod cnme qlux" # Make sure to remove spaces if it's an app password, usually it's given with spaces but used without or with, let's keep it as is, smtplib usually accepts it with spaces. Actually it's safer to remove spaces.
+SENDER_PASSWORD = "sqbk hsod cnme qlux" 
 
 def send_otp_email(recipient_email, otp):
     subject = "Your Verification Code - Dre Studios"
@@ -28,10 +28,9 @@ def send_otp_email(recipient_email, otp):
     msg.attach(MIMEText(body, 'html'))
 
     try:
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        # Remove spaces from the app password just in case
+        # Use SMTP_SSL for port 465
         password = SENDER_PASSWORD.replace(" ", "")
+        server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT)
         server.login(SENDER_EMAIL, password)
         server.send_message(msg)
         server.quit()
@@ -62,9 +61,8 @@ def send_password_reset_email(recipient_email, reset_link):
     msg.attach(MIMEText(body, 'html'))
 
     try:
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
         password = SENDER_PASSWORD.replace(" ", "")
+        server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT)
         server.login(SENDER_EMAIL, password)
         server.send_message(msg)
         server.quit()
