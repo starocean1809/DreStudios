@@ -35,13 +35,17 @@ def send_otp():
     db.session.add(otp_record)
     db.session.commit()
     
-    if send_otp_email(email, otp):
-        return jsonify({'msg': 'OTP sent successfully'}), 200
-    else:
-        # Rollback OTP if email fails
+    try:
+        if send_otp_email(email, otp):
+            return jsonify({'msg': 'OTP sent successfully'}), 200
+        else:
+            # This happens if send_otp_email returns False (e.g. SMTP issue)
+            return jsonify({'msg': 'Failed to send OTP email. Please check server logs.'}), 500
+    except Exception as e:
+        # Rollback OTP if something crashes
         db.session.delete(otp_record)
         db.session.commit()
-        return jsonify({'msg': 'Failed to send OTP'}), 500
+        return jsonify({'msg': 'Internal Server Error', 'error': str(e)}), 500
 
 @bp.route('/verify-otp', methods=['POST'])
 def verify_otp():
