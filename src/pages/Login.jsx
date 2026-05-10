@@ -9,12 +9,13 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     try {
       await login(email, password);
       navigate('/');
@@ -46,6 +47,15 @@ export default function Login() {
               </div>
             )}
 
+            {success && (
+              <div className="p-4 rounded-xl bg-emerald-500/10 text-emerald-600 text-xs border border-emerald-500/20 text-center font-medium">
+                <p>{success}</p>
+                <p className="mt-2 text-destructive font-bold uppercase tracking-wider text-[10px]">
+                  Not in your inbox? Please check your Spam folder.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Email or Phone</label>
               <div className="relative group">
@@ -74,6 +84,27 @@ export default function Login() {
                   required
                 />
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!email) return setError('Please enter your email first');
+                  try {
+                    setError('');
+                    setSuccess('Sending...');
+                    await Auth.requestPasswordReset(email);
+                    setSuccess('Password reset link sent!');
+                  } catch (err) {
+                    setSuccess('');
+                    setError(err.message);
+                  }
+                }}
+                className="text-xs font-bold text-primary hover:underline"
+              >
+                Forgot Password?
+              </button>
             </div>
 
             <Button type="submit" className="w-full h-11 rounded-xl font-semibold shadow-lg shadow-primary/20">

@@ -24,6 +24,7 @@ export default function Profile() {
   const { user, logout, loading: authLoading } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [passwordResetSuccess, setPasswordResetSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -188,26 +189,37 @@ export default function Profile() {
                 <Shield size={12} className="text-primary" /> Security Overview
               </h4>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-600">Password</span>
-                  <button 
-                    type="button"
-                    disabled={isSaving}
-                    onClick={async () => {
-                      try {
-                        setIsSaving(true);
-                        await Auth.requestPasswordReset(user.email);
-                        alert('Password reset link has been sent to your email.');
-                      } catch (err) {
-                        alert(err.message || 'Failed to send reset link');
-                      } finally {
-                        setIsSaving(false);
-                      }
-                    }}
-                    className="text-[10px] font-black text-primary uppercase cursor-pointer hover:underline disabled:opacity-50"
-                  >
-                    Change
-                  </button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-600">Password</span>
+                    <button 
+                      type="button"
+                      disabled={isSaving}
+                      onClick={async () => {
+                        try {
+                          setIsSaving(true);
+                          setPasswordResetSuccess(false);
+                          await Auth.requestPasswordReset(user.email);
+                          setPasswordResetSuccess(true);
+                        } catch (err) {
+                          alert(err.message || 'Failed to send reset link');
+                        } finally {
+                          setIsSaving(false);
+                        }
+                      }}
+                      className="text-[10px] font-black text-primary uppercase cursor-pointer hover:underline disabled:opacity-50"
+                    >
+                      Change
+                    </button>
+                  </div>
+                  {passwordResetSuccess && (
+                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase">Reset link sent!</p>
+                      <p className="text-destructive font-black uppercase tracking-wider text-[8px] mt-1 leading-tight">
+                        Not in your inbox? <br/> Check your Spam folder.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-600">Two-Factor</span>

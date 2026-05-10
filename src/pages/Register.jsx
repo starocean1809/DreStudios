@@ -160,8 +160,11 @@ export default function Register() {
                 ) : (
                   <form onSubmit={handleVerifyOtp} className="space-y-4">
                     <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 text-sm text-center text-muted-foreground mb-4">
-                      OTP sent to <span className="font-semibold text-foreground">{formData.email}</span>
-                      <button type="button" onClick={() => setOtpSent(false)} className="text-primary ml-2 hover:underline text-xs">Change</button>
+                      <p>OTP sent to <span className="font-semibold text-foreground">{formData.email}</span></p>
+                      <p className="text-[10px] mt-2 text-destructive font-bold uppercase tracking-wider">
+                        Not in your inbox? Please check your <strong>Spam</strong> folder.
+                      </p>
+                      <button type="button" onClick={() => setOtpSent(false)} className="text-primary mt-2 hover:underline text-xs block mx-auto">Change Email</button>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-muted-foreground ml-1">Enter 6-digit OTP</label>
