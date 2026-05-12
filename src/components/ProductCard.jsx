@@ -91,10 +91,6 @@ export default function ProductCard({ product }) {
         
         <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-50">
           <p className="text-lg font-black text-primary">₹{product.price?.toLocaleString()}</p>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-50/50 border border-slate-100">
-            <Layers size={12} className="text-primary/40" />
-            <span className="text-[10px] font-black text-foreground">{product.stock_count || 0}</span>
-          </div>
         </div>
       </div>
     </motion.div>

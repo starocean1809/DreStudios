@@ -11,8 +11,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, editProduc
     category: 'Art',
     price: '',
     description: '',
-    media: [],
-    stock_count: 0
+    media: []
   });
 
   useEffect(() => {
@@ -27,8 +26,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, editProduc
         category: editProduct.category || 'Art',
         price: editProduct.price?.toString() || '',
         description: editProduct.description || '',
-        media: existingMedia,
-        stock_count: editProduct.stock_count?.toString() || '0'
+        media: existingMedia
       });
     } else {
       setFormData({
@@ -36,8 +34,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, editProduc
         category: 'Art',
         price: '',
         description: '',
-        media: [],
-        stock_count: 0
+        media: []
       });
     }
   }, [editProduct, isOpen]);
@@ -107,7 +104,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, editProduc
         price: parseFloat(formData.price),
         description: formData.description,
         images: formData.media, // Backend stores the whole media array
-        stock_count: parseInt(formData.stock_count) || 0
+        stock_count: 999 // Default high stock
       };
 
       if (editProduct) {
@@ -290,35 +287,19 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, editProduc
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground ml-1 uppercase">Price (Rs)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₹</span>
-                  <input
-                    required
-                    type="number"
-                    step="1"
-                    placeholder="500"
-                    className="w-full h-11 pl-8 pr-4 rounded-xl bg-slate-50 border border-white/40 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 outline-none text-sm transition-all"
-                    value={formData.price}
-                    onChange={e => setFormData({...formData, price: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground ml-1 uppercase">Stock Count</label>
-                <div className="relative">
-                  <Layers className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    required
-                    type="number"
-                    placeholder="10"
-                    className="w-full h-11 pl-10 pr-4 rounded-xl bg-slate-50 border border-white/40 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 outline-none text-sm transition-all"
-                    value={formData.stock_count}
-                    onChange={e => setFormData({...formData, stock_count: e.target.value})}
-                  />
-                </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground ml-1 uppercase">Price (Rs)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₹</span>
+                <input
+                  required
+                  type="number"
+                  step="1"
+                  placeholder="500"
+                  className="w-full h-11 pl-8 pr-4 rounded-xl bg-slate-50 border border-white/40 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 outline-none text-sm transition-all"
+                  value={formData.price}
+                  onChange={e => setFormData({...formData, price: e.target.value})}
+                />
               </div>
             </div>
 

@@ -17,8 +17,8 @@ export default function AddToCartAnimation() {
             animate={{ scale: 1, rotate: 0 }}
             transition={{ 
               type: "spring", 
-              stiffness: 260, 
-              damping: 20 
+              stiffness: 400, 
+              damping: 15 
             }}
             className="w-24 h-24 rounded-3xl bg-white flex items-center justify-center mx-auto shadow-2xl relative z-10"
           >
@@ -43,7 +43,7 @@ export default function AddToCartAnimation() {
                 x: Math.cos(i * 45 * Math.PI / 180) * 80,
                 y: Math.sin(i * 45 * Math.PI / 180) * 80
               }}
-              transition={{ duration: 1, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
             >
               <Sparkles className="text-yellow-400" size={16} />
@@ -57,7 +57,7 @@ export default function AddToCartAnimation() {
           transition={{ delay: 0.4 }}
         >
           <h2 className="text-2xl font-black text-slate-900 leading-tight">Added to Cart!</h2>
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">Opening your basket...</p>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">Item saved successfully</p>
         </motion.div>
       </div>
     </motion.div>

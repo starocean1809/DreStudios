@@ -27,10 +27,46 @@ export default function Sidebar({ collapsed, onToggle }) {
   const isStore = location.pathname === '/';
 
   const handleCategoryClick = (catId) => {
-    navigate(`/?category=${encodeURIComponent(catId)}`);
+    if (catId === 'All Products') {
+      navigate('/');
+    } else {
+      navigate(`/?category=${encodeURIComponent(catId)}`);
+    }
   };
 
-  const NavItem = ({ icon: Icon, label, isActive, onClick, colorClass = "" }) => (
+  const [availableCategories, setAvailableCategories] = React.useState([]);
+  const [cartCount, setCartCount] = React.useState(0);
+
+  const fetchCartCount = async () => {
+    try {
+      const data = await fetch('http://localhost:5000/api/cart', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).then(res => res.json());
+      const totalCount = data.reduce((acc, item) => acc + item.quantity, 0);
+      setCartCount(totalCount);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  React.useEffect(() => {
+    const fetchAvailableCategories = async () => {
+      try {
+        const data = await fetch('http://localhost:5000/api/products').then(res => res.json());
+        const uniqueCats = Array.from(new Set(data.map(p => p.category)));
+        setAvailableCategories(uniqueCats);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchAvailableCategories();
+    fetchCartCount();
+
+    window.addEventListener('cartUpdated', fetchCartCount);
+    return () => window.removeEventListener('cartUpdated', fetchCartCount);
+  }, []);
+
+  const NavItem = ({ icon: Icon, label, isActive, onClick, badge = null, colorClass = "" }) => (
     <button
       onClick={onClick}
       title={collapsed ? label : undefined}
@@ -49,15 +85,29 @@ export default function Sidebar({ collapsed, onToggle }) {
           className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-primary rounded-full"
         />
       )}
-      <Icon size={18} className={cn("flex-shrink-0", isActive && "text-primary")} />
+      <div className="relative">
+        <Icon size={18} className={cn("flex-shrink-0", isActive && "text-primary")} />
+        {collapsed && badge !== null && badge > 0 && (
+          <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-primary text-white text-[8px] font-black flex items-center justify-center border-2 border-white">
+            {badge}
+          </div>
+        )}
+      </div>
       {!collapsed && (
-        <motion.span
-          initial={{ opacity: 0, x: -6 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="whitespace-nowrap overflow-hidden"
-        >
-          {label}
-        </motion.span>
+        <div className="flex-1 flex items-center justify-between overflow-hidden">
+          <motion.span
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="whitespace-nowrap overflow-hidden"
+          >
+            {label}
+          </motion.span>
+          {badge !== null && badge > 0 && (
+            <span className="bg-primary/20 text-primary text-[10px] font-black px-1.5 py-0.5 rounded-md min-w-[20px] text-center">
+              {badge}
+            </span>
+          )}
+        </div>
       )}
     </button>
   );
@@ -136,9 +186,42 @@ export default function Sidebar({ collapsed, onToggle }) {
               <NavItem 
                 icon={Home} 
                 label="All Categories" 
-                isActive={isStore} 
-                onClick={() => navigate('/')} 
+                isActive={isStore && activeCategory === 'All Products'} 
+                onClick={() => handleCategoryClick('All Products')} 
               />
+
+              {/* Sub-menu for available categories */}
+              {!collapsed && availableCategories.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="pl-9 space-y-1 mt-1 border-l-2 border-primary/5 ml-4"
+                >
+                  {availableCategories.map(cat => {
+                    const isActive = activeCategory === cat;
+                    const catInfo = categories.find(c => c.label === cat);
+                    const Icon = catInfo?.icon || Package;
+                    
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => handleCategoryClick(cat)}
+                        className={cn(
+                          "w-full flex items-center gap-3 py-2 text-[11px] font-black uppercase tracking-widest transition-all hover:text-primary",
+                          isActive ? "text-primary" : "text-slate-400"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-1 h-1 rounded-full",
+                          isActive ? "bg-primary scale-150" : "bg-slate-300"
+                        )} />
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+
               <NavItem 
                 icon={ShoppingBag} 
                 label="My Orders" 
@@ -150,6 +233,7 @@ export default function Sidebar({ collapsed, onToggle }) {
                 label="My Cart" 
                 isActive={location.pathname === '/cart'} 
                 onClick={() => navigate('/cart')} 
+                badge={cartCount}
               />
               <NavItem 
                 icon={User} 

@@ -12,6 +12,8 @@ import CartPage from '@/pages/Cart';
 import ProductDetails from '@/pages/ProductDetails';
 import Profile from '@/pages/Profile';
 import AdminOrders from '@/pages/AdminOrders';
+import OrderSuccess from '@/pages/OrderSuccess';
+import Checkout from '@/pages/Checkout';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 
@@ -76,10 +78,26 @@ export default function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/order-success/:id" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <OrderSuccess />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
           <Route path="/cart" element={
             <ProtectedRoute>
               <MainLayout>
                 <CartPage />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Checkout />
               </MainLayout>
             </ProtectedRoute>
           } />
