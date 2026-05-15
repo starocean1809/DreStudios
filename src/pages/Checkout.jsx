@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  ShoppingBag, 
-  MapPin, 
-  Phone, 
-  Truck, 
-  Calendar, 
+import {
+  ShoppingBag,
+  MapPin,
+  Phone,
+  Truck,
+  Calendar,
   ArrowLeft,
   ChevronRight,
   Package,
@@ -17,7 +17,7 @@ import {
   Map,
   Hash
 } from 'lucide-react';
-import { Orders, Query } from '@/api/entities';
+import { Orders, Query, Payments } from '@/api/entities';
 import { useAuth } from '@/lib/AuthContext';
 import { cn } from '@/lib/utils';
 import Footer from '@/components/Footer';
@@ -27,12 +27,12 @@ export default function Checkout() {
   const { state } = useLocation();
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOrdering, setIsOrdering] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  
+
   const [address, setAddress] = useState({
     address_line1: '',
     address_line2: '',
@@ -79,6 +79,11 @@ export default function Checkout() {
     }
   }, [user, useProfileAddress]);
 
+  const subtotal = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const gstAmount = subtotal * 0.18;
+  const shippingAmount = 250; // Standard shipping as per user example
+  const totalAmount = subtotal + gstAmount + shippingAmount;
+
   const handleOrder = async (e) => {
     e.preventDefault();
     if (!address.address_line1 || !address.city || !address.state_name || !address.zip_code || !address.phone) {
@@ -86,40 +91,43 @@ export default function Checkout() {
       return;
     }
 
-    const fullAddress = `${address.address_line1}${address.address_line2 ? ', ' + address.address_line2 : ''}`;
     setIsOrdering(true);
     try {
-      let lastOrderId = null;
-      for (const item of items) {
-        const result = await Orders.create(item.product.id, { 
-          shipping_address: fullAddress,
-          city: address.city,
-          state: address.state_name,
-          zip_code: address.zip_code,
-          phone: address.phone,
+      // Create Final Order directly in our system (Skipping Razorpay as requested)
+      const fullAddress = `${address.address_line1}${address.address_line2 ? ', ' + address.address_line2 : ''}`;
+      const payload = {
+        items: items.map(item => ({
+          product_id: item.product.id,
           quantity: item.quantity
-        });
-        lastOrderId = result.id || result.order_id;
-      }
-      
-      // If it was a cart checkout, clear the cart
+        })),
+        shipping_address: fullAddress,
+        city: address.city,
+        state: address.state_name,
+        zip_code: address.zip_code,
+        phone: address.phone,
+        subtotal,
+        gst_amount: gstAmount,
+        shipping_amount: shippingAmount,
+        total_amount: totalAmount,
+      };
+
+      const result = await Orders.create(payload);
+
+      // Cleanup and Success
       if (state?.items) {
-        // Import Cart and clear it
         const { Cart: CartAPI } = await import('@/api/entities');
         await CartAPI.clear();
         window.dispatchEvent(new Event('cartUpdated'));
       }
 
       setOrderSuccess(true);
-      setTimeout(() => navigate(`/order-success/${lastOrderId}`), 3000);
+      setTimeout(() => navigate(`/order-success/${result.id || result.order_id}`), 3000);
+
     } catch (err) {
-      alert(err.message || 'Failed to place order');
-    } finally {
+      alert(err.message || 'Failed to place order. Please check your details.');
       setIsOrdering(false);
     }
   };
-
-  const totalAmount = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
   if (loading) {
     return (
@@ -145,7 +153,7 @@ export default function Checkout() {
   return (
     <div className="flex-1 overflow-auto bg-[#fafbff]">
       <div className="max-w-6xl mx-auto p-4 md:p-8 pt-10">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-primary transition-all mb-8"
         >
@@ -155,7 +163,7 @@ export default function Checkout() {
         <div className="flex flex-col lg:flex-row gap-12 items-start">
           {/* Left: Shipping Form (60%) */}
           <div className="w-full lg:w-[65%] space-y-8">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="glass-strong p-8 md:p-12 rounded-[48px] border border-white shadow-2xl bg-white/80"
@@ -167,7 +175,7 @@ export default function Checkout() {
                 </div>
 
                 <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                  <button 
+                  <button
                     onClick={() => setUseProfileAddress(true)}
                     className={cn(
                       "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
@@ -176,7 +184,7 @@ export default function Checkout() {
                   >
                     Primary
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       setUseProfileAddress(false);
                       setAddress({
@@ -324,22 +332,22 @@ export default function Checkout() {
 
           {/* Right: Order Summary (40%) */}
           <div className="w-full lg:w-[35%] sticky top-8">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               className="glass-strong p-8 rounded-[48px] border border-white shadow-2xl bg-white/80 overflow-hidden"
             >
               <h2 className="text-xl font-black text-slate-900 mb-8">Order Summary</h2>
-              
+
               <div className="space-y-6">
                 {/* Product List */}
                 <div className="space-y-4 max-h-[400px] overflow-auto pr-2 custom-scrollbar">
                   {items.map((item, idx) => (
                     <div key={item.id || idx} className="flex gap-4 p-4 rounded-3xl bg-slate-50 border border-slate-100">
                       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white shadow-sm flex-shrink-0">
-                        <img 
-                          src={typeof item.product?.images?.[0] === 'object' ? item.product.images[0].url : (item.product?.images?.[0] || 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=400&q=80')} 
-                          className="w-full h-full object-cover" 
+                        <img
+                          src={typeof item.product?.images?.[0] === 'object' ? item.product.images[0].url : (item.product?.images?.[0] || 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=400&q=80')}
+                          className="w-full h-full object-cover"
                           onError={e => { e.target.src = 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=400&q=80'; }}
                         />
                       </div>
@@ -358,26 +366,30 @@ export default function Checkout() {
                 <div className="space-y-4 pt-4">
                   <div className="flex justify-between text-sm font-bold text-slate-400">
                     <span>Subtotal</span>
-                    <span className="text-slate-900">₹{totalAmount.toLocaleString()}</span>
+                    <span className="text-slate-900">₹{subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm font-bold text-slate-400">
-                    <span>Express Shipping</span>
-                    <span className="text-emerald-500 font-black uppercase text-[10px] bg-emerald-500/10 px-2 py-1 rounded-md tracking-widest">FREE</span>
+                    <span>GST (18%)</span>
+                    <span className="text-slate-900">₹{gstAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold text-slate-400">
+                    <span>Shipping Charges</span>
+                    <span className="text-slate-900">₹{shippingAmount.toLocaleString()}</span>
                   </div>
                   <div className="h-px bg-slate-100 my-4" />
                   <div className="flex justify-between items-end">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Amount</span>
-                    <span className="text-3xl font-black text-primary">₹{totalAmount.toLocaleString()}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Invoice Total</span>
+                    <span className="text-3xl font-black text-primary">₹{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 </div>
 
-                <div className="mt-8 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                {/* <div className="mt-8 p-4 rounded-2xl bg-primary/5 border border-primary/10">
                    <div className="flex items-center gap-3 text-primary">
                       <CreditCard size={16} />
                       <span className="text-[10px] font-black uppercase tracking-widest">Payment Method</span>
                    </div>
                    <p className="text-xs font-bold text-slate-600 mt-2">Cash on Delivery / Digital Pay upon Arrival</p>
-                </div>
+                </div> */}
               </div>
             </motion.div>
           </div>

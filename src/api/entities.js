@@ -1,12 +1,49 @@
 //const API_URL = 'https://hari-3d-business.onrender.com/api';
 const API_URL = 'http://localhost:5000/api';
 
-const getHeaders = () => {
+// Helper for handling fetch with token refresh
+const apiFetch = async (url, options = {}) => {
   const token = localStorage.getItem('token');
-  return {
+  const headers = {
     'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...options.headers
   };
+
+  let response = await fetch(url, { ...options, headers });
+
+  // If unauthorized, try refreshing the token
+  if (response.status === 401 && localStorage.getItem('refresh_token')) {
+    try {
+      const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('refresh_token')}`
+        }
+      });
+
+      if (refreshResponse.ok) {
+        const { access_token } = await refreshResponse.json();
+        localStorage.setItem('token', access_token);
+        
+        // Retry original request with new token
+        headers['Authorization'] = `Bearer ${access_token}`;
+        response = await fetch(url, { ...options, headers });
+      } else {
+        // Refresh failed - logout
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+      }
+    } catch (err) {
+      console.error('Token refresh failed:', err);
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+      window.location.href = '/login';
+    }
+  }
+
+  return response;
 };
 
 export const Query = {
@@ -16,21 +53,20 @@ export const Query = {
     if (filters.search) params.append('search', filters.search);
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
 
-    const response = await fetch(`${API_URL}/products?${params.toString()}`);
+    const response = await apiFetch(`${API_URL}/products?${params.toString()}`);
     if (!response.ok) throw new Error('Failed to fetch products');
     return await response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_URL}/products/${id}`);
+    const response = await apiFetch(`${API_URL}/products/${id}`);
     if (!response.ok) throw new Error('Failed to fetch product');
     return await response.json();
   },
 
   create: async (productData) => {
-    const response = await fetch(`${API_URL}/products`, {
+    const response = await apiFetch(`${API_URL}/products`, {
       method: 'POST',
-      headers: getHeaders(),
       body: JSON.stringify(productData)
     });
     const data = await response.json();
@@ -39,9 +75,8 @@ export const Query = {
   },
 
   delete: async (id) => {
-    const response = await fetch(`${API_URL}/products/${id}`, {
-      method: 'DELETE',
-      headers: getHeaders()
+    const response = await apiFetch(`${API_URL}/products/${id}`, {
+      method: 'DELETE'
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.msg || 'Failed to delete product');
@@ -49,13 +84,20 @@ export const Query = {
   },
 
   update: async (id, productData) => {
-    const response = await fetch(`${API_URL}/products/${id}`, {
+    const response = await apiFetch(`${API_URL}/products/${id}`, {
       method: 'PUT',
-      headers: getHeaders(),
       body: JSON.stringify(productData)
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.msg || 'Failed to update product');
+    return data;
+  },
+  toggleStock: async (id) => {
+    const response = await apiFetch(`${API_URL}/products/${id}/toggle-stock`, {
+      method: 'POST'
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.msg || 'Failed to toggle stock');
     return data;
   }
 };
@@ -70,6 +112,7 @@ export const Auth = {
     const data = await response.json();
     if (!response.ok) throw new Error(data.msg || 'Login failed');
     localStorage.setItem('token', data.access_token);
+    localStorage.setItem('refresh_token', data.refresh_token);
     return data;
   },
 
@@ -130,26 +173,25 @@ export const Auth = {
 
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
   },
 
   getMe: async () => {
     const token = localStorage.getItem('token');
     if (!token) return null;
 
-    const response = await fetch(`${API_URL}/auth/me`, {
-      headers: getHeaders()
-    });
+    const response = await apiFetch(`${API_URL}/auth/me`);
     if (!response.ok) {
       localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
       return null;
     }
     return await response.json();
   },
 
   updateProfile: async (profileData) => {
-    const response = await fetch(`${API_URL}/auth/profile`, {
+    const response = await apiFetch(`${API_URL}/auth/profile`, {
       method: 'PUT',
-      headers: getHeaders(),
       body: JSON.stringify(profileData)
     });
     const data = await response.json();
@@ -159,14 +201,10 @@ export const Auth = {
 };
 
 export const Orders = {
-  create: async (productId, addressData = {}) => {
-    const response = await fetch(`${API_URL}/orders`, {
+  create: async (payload) => {
+    const response = await apiFetch(`${API_URL}/orders`, {
       method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({
-        product_id: productId,
-        ...addressData
-      })
+      body: JSON.stringify(payload)
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.msg || 'Failed to place order');
@@ -174,17 +212,14 @@ export const Orders = {
   },
 
   list: async () => {
-    const response = await fetch(`${API_URL}/orders?t=${Date.now()}`, {
-      headers: getHeaders()
-    });
+    const response = await apiFetch(`${API_URL}/orders?t=${Date.now()}`);
     if (!response.ok) throw new Error('Failed to fetch orders');
     return await response.json();
   },
 
   updateMilestone: async (orderId, milestoneId, updateData) => {
-    const response = await fetch(`${API_URL}/orders/${orderId}/milestone/${milestoneId}`, {
+    const response = await apiFetch(`${API_URL}/orders/${orderId}/milestone/${milestoneId}`, {
       method: 'PUT',
-      headers: getHeaders(),
       body: JSON.stringify(updateData)
     });
     const data = await response.json();
@@ -193,9 +228,8 @@ export const Orders = {
   },
 
   updateStatus: async (orderId, status) => {
-    const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
+    const response = await apiFetch(`${API_URL}/orders/${orderId}/status`, {
       method: 'PUT',
-      headers: getHeaders(),
       body: JSON.stringify({ status })
     });
     const data = await response.json();
@@ -210,17 +244,14 @@ export const User = {
 
 export const Cart = {
   list: async () => {
-    const response = await fetch(`${API_URL}/cart`, {
-      headers: getHeaders()
-    });
+    const response = await apiFetch(`${API_URL}/cart`);
     if (!response.ok) throw new Error('Failed to fetch cart');
     return await response.json();
   },
 
   add: async (productId, quantity = 1) => {
-    const response = await fetch(`${API_URL}/cart`, {
+    const response = await apiFetch(`${API_URL}/cart`, {
       method: 'POST',
-      headers: getHeaders(),
       body: JSON.stringify({ product_id: productId, quantity })
     });
     if (!response.ok) throw new Error('Failed to add to cart');
@@ -228,9 +259,8 @@ export const Cart = {
   },
 
   update: async (itemId, quantity) => {
-    const response = await fetch(`${API_URL}/cart/${itemId}`, {
+    const response = await apiFetch(`${API_URL}/cart/${itemId}`, {
       method: 'PATCH',
-      headers: getHeaders(),
       body: JSON.stringify({ quantity })
     });
     if (!response.ok) throw new Error('Failed to update cart');
@@ -238,18 +268,16 @@ export const Cart = {
   },
 
   remove: async (itemId) => {
-    const response = await fetch(`${API_URL}/cart/${itemId}`, {
-      method: 'DELETE',
-      headers: getHeaders()
+    const response = await apiFetch(`${API_URL}/cart/${itemId}`, {
+      method: 'DELETE'
     });
     if (!response.ok) throw new Error('Failed to remove item');
     return await response.json();
   },
 
   clear: async () => {
-    const response = await fetch(`${API_URL}/cart/clear`, {
-      method: 'DELETE',
-      headers: getHeaders()
+    const response = await apiFetch(`${API_URL}/cart/clear`, {
+      method: 'DELETE'
     });
     if (!response.ok) throw new Error('Failed to clear cart');
     return await response.json();
@@ -264,9 +292,8 @@ export const Reviews = {
   },
 
   create: async (reviewData) => {
-    const response = await fetch(`${API_URL}/reviews`, {
+    const response = await apiFetch(`${API_URL}/reviews`, {
       method: 'POST',
-      headers: getHeaders(),
       body: JSON.stringify(reviewData)
     });
     const data = await response.json();
@@ -277,11 +304,56 @@ export const Reviews = {
 
 export const AdminStats = {
   getOverview: async () => {
-    const response = await fetch(`${API_URL}/stats/overview`, {
-      headers: getHeaders()
-    });
+    const response = await apiFetch(`${API_URL}/stats/overview`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.msg || 'Failed to fetch stats');
     return data;
+  }
+};
+
+export const Settings = {
+  get: async () => {
+    const response = await apiFetch(`${API_URL}/settings`);
+    if (!response.ok) throw new Error('Failed to fetch settings');
+    return await response.json();
+  },
+  update: async (data) => {
+    const response = await apiFetch(`${API_URL}/settings`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update settings');
+    return await response.json();
+  },
+  init: async () => {
+    const response = await apiFetch(`${API_URL}/settings/init`);
+    return await response.json();
+  }
+};
+
+export const Invoices = {
+  getStats: async () => {
+    const response = await apiFetch(`${API_URL}/stats/invoices`);
+    if (!response.ok) throw new Error('Failed to fetch invoice stats');
+    return await response.json();
+  }
+};
+
+export const Payments = {
+  createOrder: async (amount) => {
+    const response = await apiFetch(`${API_URL}/payments/create-order`, {
+      method: 'POST',
+      body: JSON.stringify({ amount: Math.round(amount * 100) }) // Convert to paise
+    });
+    if (!response.ok) throw new Error('Failed to create Razorpay order');
+    return await response.json();
+  },
+  verifyPayment: async (paymentData) => {
+    const response = await apiFetch(`${API_URL}/payments/verify-payment`, {
+      method: 'POST',
+      body: JSON.stringify(paymentData)
+    });
+    if (!response.ok) throw new Error('Payment verification failed');
+    return await response.json();
   }
 };

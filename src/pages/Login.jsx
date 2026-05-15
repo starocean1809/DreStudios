@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Phone, Package, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { Auth } from '@/api/entities';
 import { Button } from '@/components/ui/button';
 
 export default function Login() {

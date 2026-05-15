@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import { Query } from '@/api/entities';
 import { categories } from '@/components/Sidebar';
 import { LayoutGrid, Package } from 'lucide-react';
+import LoadingScreen from "@/components/LoadingScreen";
 import { cn } from '@/lib/utils';
 
 export default function Store() {
@@ -64,7 +65,7 @@ export default function Store() {
       <main className="flex-1 overflow-y-auto px-6 py-6 pei-grid-bg">
         
         {/* Category Filter Bar */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 mb-4 border-b border-white/40">
+        <div className="flex flex-wrap gap-2 pb-4 mb-6 border-b border-white/40">
           {/* Always show "All Products" */}
           {[
             { id: 'All Products', label: 'All Products', icon: LayoutGrid },
@@ -81,7 +82,7 @@ export default function Store() {
                 key={cat.id}
                 onClick={() => handleCategoryClick(cat.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex-shrink-0 shadow-sm border",
+                  "flex items-center gap-1.5 px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm border",
                   isActive 
                     ? "bg-primary text-white border-primary shadow-primary/20" 
                     : "bg-white/60 text-slate-500 hover:bg-white/90 border-white/70 hover:text-primary hover:border-primary/20"
@@ -95,9 +96,7 @@ export default function Store() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="w-8 h-8 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
-          </div>
+          <LoadingScreen />
         ) : products.length === 0 ? (
           <EmptyState category={activeCategory} />
         ) : (

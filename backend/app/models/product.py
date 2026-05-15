@@ -21,5 +21,7 @@ class Product(db.Model):
             'description': self.description,
             'images': self.images,
             'featured': self.featured,
-            'stock_count': self.stock_count
+            'stock_count': self.stock_count,
+            'is_active': True,  # Default to True
+            'is_out_of_stock': self.stock_count == 0
         }

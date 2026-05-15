@@ -102,7 +102,7 @@ export default function OrderSuccess() {
               <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Order ID</p>
-                  <p className="text-lg font-black text-slate-900">#{order.id.toString().padStart(4, '0')}</p>
+                  <p className="text-lg font-black text-slate-900">{order.order_id}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Date</p>
@@ -112,61 +112,71 @@ export default function OrderSuccess() {
 
               <div className="p-8 space-y-8">
                 {/* Product Section */}
-                <div className="flex flex-col sm:flex-row gap-8">
-                  <div className="w-full sm:w-40 aspect-square rounded-3xl overflow-hidden bg-slate-100 shadow-inner border border-slate-100 flex-shrink-0">
-                    <img 
-                      src={typeof order.product?.images?.[0] === 'object' ? order.product.images[0].url : (order.product?.images?.[0] || 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=600&q=80')} 
-                      className="w-full h-full object-cover" 
-                      onError={e => { e.target.src = 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=600&q=80'; }}
-                    />
-                  </div>
-                  <div className="flex-1 space-y-4">
-                    <div>
-                      <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/5">
-                        {order.product?.category}
-                      </span>
-                      <h3 className="text-2xl font-black text-slate-900 mt-2">{order.product?.title}</h3>
-                      <p className="text-sm text-slate-500 font-medium line-clamp-2 mt-2 leading-relaxed">
-                        {order.product?.description}
-                      </p>
+                <div className="space-y-6">
+                  {order.items?.map((item, idx) => (
+                    <div key={item.id || idx} className="flex flex-col sm:flex-row gap-6">
+                      <div className="w-full sm:w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 shadow-inner border border-slate-100 flex-shrink-0">
+                        <img 
+                          src={typeof item.product?.images?.[0] === 'object' ? item.product.images[0].url : (item.product?.images?.[0] || 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=600&q=80')} 
+                          className="w-full h-full object-cover" 
+                          onError={e => { e.target.src = 'https://images.unsplash.com/photo-1611117775350-ac3950990985?w=600&q=80'; }}
+                        />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div>
+                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest border border-primary/5">
+                            {item.product?.category}
+                          </span>
+                          <h3 className="text-lg font-black text-slate-900 mt-1">{item.product?.title}</h3>
+                        </div>
+                        <div className="flex items-center gap-6">
+                           <div>
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Quantity</p>
+                              <p className="text-xs font-black text-slate-900">{item.quantity} Units</p>
+                           </div>
+                           <div className="w-px h-6 bg-slate-100" />
+                           <div>
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Price</p>
+                              <p className="text-xs font-black text-slate-900">₹{item.price?.toLocaleString()}</p>
+                           </div>
+                           <div className="w-px h-6 bg-slate-100" />
+                           <div>
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total</p>
+                              <p className="text-xs font-black text-primary">₹{item.total?.toLocaleString()}</p>
+                           </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-6 pt-2">
-                       <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Quantity</p>
-                          <p className="text-sm font-black text-slate-900">{order.quantity} Units</p>
-                       </div>
-                       <div className="w-px h-8 bg-slate-100" />
-                       <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Price / Unit</p>
-                          <p className="text-sm font-black text-slate-900">₹{order.product?.price?.toLocaleString()}</p>
-                       </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 <div className="h-px bg-slate-100" />
 
                 {/* Tracking Preview */}
-                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Truck size={12} className="text-primary" /> Current Status
-                  </h4>
-                  <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary">
-                        <Clock size={20} />
+                  <div className="bg-emerald-50 rounded-[32px] p-8 border border-emerald-100/50 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-emerald-50">
+                        <CheckCircle2 size={28} />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-slate-900 uppercase tracking-wide">In Queue</p>
-                        <p className="text-[10px] font-bold text-slate-400 mt-0.5">Our team is preparing your custom print model.</p>
+                        <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.2em] mb-1">Current Status</p>
+                        <h4 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                          {order.status?.replace(/_/g, ' ') || 'PROCESSING'}
+                        </h4>
+                        <p className="text-sm font-medium text-slate-500 mt-1">
+                          {order.status === 'PAYMENT_SUCCESS' 
+                            ? 'Your payment has been received and verified.' 
+                            : 'Our team is preparing your custom print model.'}
+                        </p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">Processing</span>
+                    <div className="px-6 py-3 rounded-2xl bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">
+                      Confirmed
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
+              </motion.div>
+            </div>
 
           {/* Sidebar Info (Right 1/3) */}
           <div className="space-y-6">
@@ -207,26 +217,48 @@ export default function OrderSuccess() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="glass-strong p-8 rounded-[40px] border border-white shadow-xl bg-slate-900 text-white relative overflow-hidden"
+              className="rounded-[48px] border border-slate-200 shadow-2xl bg-white overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/20 to-transparent pointer-events-none" />
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Payment Summary</h4>
-              <div className="space-y-4 relative z-10">
-                <div className="flex justify-between items-center text-sm font-bold opacity-60">
-                   <span>Items ({order.quantity})</span>
-                   <span>₹{(order.product?.price * order.quantity).toLocaleString()}</span>
+              <div className="p-8 bg-slate-900 text-white">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Payment Status</h4>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <p className="text-lg font-black uppercase tracking-tight">Fully Paid</p>
                 </div>
-                <div className="flex justify-between items-center text-sm font-bold opacity-60">
-                   <span>Shipping</span>
-                   <span className="text-emerald-400 font-black">FREE</span>
-                </div>
-                <div className="h-px bg-white/10 my-4" />
-                <div className="flex justify-between items-end">
-                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Paid</span>
-                   <span className="text-3xl font-black text-white">₹{(order.product?.price * order.quantity).toLocaleString()}</span>
+              </div>
+              
+              <div className="p-8 space-y-5">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-4 mb-2">Invoice Summary</h4>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-slate-500">Subtotal</span>
+                    <span className="text-sm font-black text-slate-900">₹{order.subtotal?.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-slate-500">GST (18%)</span>
+                    <span className="text-sm font-black text-slate-900">₹{order.gst_amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-slate-500">Shipping</span>
+                    <span className="text-sm font-black text-slate-900">₹{order.shipping_amount?.toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="pt-4 mt-4 border-t border-dashed border-slate-200">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount Paid</p>
+                        <p className="text-3xl font-black text-primary tracking-tight">₹{order.total_amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                      </div>
+                      <div className="text-right">
+                         <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">Success</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
+
 
             {/* Actions */}
             <div className="space-y-3 pt-4">

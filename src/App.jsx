@@ -12,6 +12,7 @@ import CartPage from '@/pages/Cart';
 import ProductDetails from '@/pages/ProductDetails';
 import Profile from '@/pages/Profile';
 import AdminOrders from '@/pages/AdminOrders';
+import AdminInvoices from '@/pages/AdminInvoices';
 import OrderSuccess from '@/pages/OrderSuccess';
 import Checkout from '@/pages/Checkout';
 import Sidebar from '@/components/Sidebar';
@@ -29,17 +30,22 @@ function ProtectedRoute({ children, adminOnly = false }) {
 
 function MainLayout({ children }) {
   const [collapsed, setCollapsed] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = React.useState(false);
   const { user } = useAuth();
 
   return (
-    <div className="flex h-screen w-full bg-[#f8f9ff] text-foreground font-sans selection:bg-primary/20">
+    <div className="flex h-screen w-full bg-[#f8f9ff] text-foreground font-sans selection:bg-primary/20 overflow-hidden">
       <Sidebar 
         collapsed={collapsed} 
         onToggle={() => setCollapsed(!collapsed)} 
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
       />
-      <div className="flex-1 flex flex-col min-w-0 relative">
-        <Header />
-        {children}
+      <div className="flex-1 flex flex-col min-w-0 relative h-full">
+        <Header onMenuClick={() => setMobileOpen(true)} />
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
       </div>
     </div>
   );
@@ -130,6 +136,13 @@ export default function App() {
             <ProtectedRoute adminOnly>
               <MainLayout>
                 <AdminOrders />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/invoices" element={
+            <ProtectedRoute adminOnly>
+              <MainLayout>
+                <AdminInvoices />
               </MainLayout>
             </ProtectedRoute>
           } />

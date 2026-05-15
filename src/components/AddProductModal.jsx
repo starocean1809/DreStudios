@@ -308,7 +308,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, editProduc
               <div className="relative">
                 <FileText className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                 <textarea
-                  rows="3"
+                  rows="6"
                   placeholder="Tell users about this 3D model..."
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-white/40 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 outline-none text-sm transition-all resize-none"
                   value={formData.description}

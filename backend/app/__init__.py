@@ -24,6 +24,7 @@ def create_app(config_class=Config):
     from app.models.cart import CartItem
     from app.models.review import Review
     from app.models.otp import OtpVerification
+    from app.models.setting import Setting
 
     from app.routes import auth, products, orders, cart, reviews, stats
     app.register_blueprint(auth.bp, url_prefix='/api/auth')
@@ -32,5 +33,10 @@ def create_app(config_class=Config):
     app.register_blueprint(cart.bp, url_prefix='/api/cart')
     app.register_blueprint(reviews.bp, url_prefix='/api/reviews')
     app.register_blueprint(stats.bp, url_prefix='/api/stats')
+    from app.routes import settings
+    app.register_blueprint(settings.bp, url_prefix='/api/settings')
+
+    with app.app_context():
+        db.create_all()
 
     return app

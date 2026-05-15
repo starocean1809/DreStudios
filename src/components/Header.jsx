@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, LayoutGrid, List, ChevronDown, User, LogOut, Package, Shield, ShoppingCart } from 'lucide-react';
+import { Search, LayoutGrid, List, ChevronDown, User, LogOut, Package, Shield, ShoppingCart, Menu } from 'lucide-react';
 import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Cart } from '@/api/entities';
@@ -20,7 +20,7 @@ const sortOptions = [
   { value: 'name_asc', label: 'Name A → Z' },
 ];
 
-export default function Header() {
+export default function Header({ onMenuClick }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') || '';
   const viewMode = searchParams.get('view') || 'grid';
@@ -65,29 +65,38 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-10 px-6 py-3 glass border-b border-white/50 flex items-center justify-between gap-4 h-[64px]">
-      {/* Search - Only on store page */}
-      <div className="flex-1 max-w-xl relative">
-        {isStore && (
-          <>
-            <Search
-              size={16}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-            />
-            <input
-              type="text"
-              placeholder="Search 3D models..."
-              value={search}
-              onChange={e => updateParam('search', e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-full text-sm bg-white/60 backdrop-blur-sm border border-white/70 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 placeholder:text-muted-foreground/60 transition-all"
-            />
-          </>
-        )}
+    <header className="sticky top-0 z-10 px-4 md:px-6 py-3 glass border-b border-white/50 flex items-center justify-between gap-4 h-[64px]">
+      {/* Mobile Menu Toggle */}
+      <button 
+        onClick={onMenuClick}
+        className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-white/60 border border-white/70 shadow-sm text-primary hover:bg-white transition-all active:scale-95"
+      >
+        <Menu size={20} />
+      </button>
+
+      {/* Branding / Logo - Replaces Search */}
+      <div className="flex-1 flex items-center">
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-slate-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <span className="text-lg md:text-xl font-black text-white italic">D</span>
+          </div>
+          <div className="hidden sm:block">
+            <h1 className="text-xs md:text-sm font-black text-slate-900 tracking-tighter uppercase leading-none">Dre Studios</h1>
+            <p className="text-[7px] md:text-[8px] font-black text-primary tracking-[0.2em] uppercase mt-0.5">3D Prints</p>
+          </div>
+        </Link>
       </div>
 
       {/* Controls */}
-      <div className="flex items-center gap-3 flex-shrink-0">
-        {/* State specific controls */}
+      <div className="flex items-center gap-4 flex-shrink-0">
+        {/* User Name Display */}
+        {user && (
+          <div className="hidden md:block mr-1">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Welcome back, </span>
+            <span className="text-xs font-black text-slate-900 tracking-tight capitalize">{user.name || user.email.split('@')[0]}</span>
+          </div>
+        )}
+
         {/* Cart Button */}
         {user && (
           <button 
@@ -108,8 +117,8 @@ export default function Header() {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center justify-center w-10 h-10 rounded-full bg-white/60 border border-white/70 shadow-sm hover:scale-105 transition-all text-primary overflow-hidden">
               {user ? (
-                <div className="w-full h-full bg-primary/10 flex items-center justify-center font-bold text-xs">
-                   {user.email.substring(0, 2).toUpperCase()}
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center font-bold text-xs uppercase">
+                   {user.name ? user.name.substring(0, 2) : user.email.substring(0, 2)}
                 </div>
               ) : (
                 <User size={18} />

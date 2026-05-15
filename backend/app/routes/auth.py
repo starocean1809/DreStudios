@@ -1,5 +1,10 @@
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import (
+    create_access_token, 
+    create_refresh_token, 
+    jwt_required, 
+    get_jwt_identity
+)
 from app.models.user import User
 from app.models.otp import OtpVerification
 from app import db
@@ -133,10 +138,19 @@ def login():
         return jsonify({'msg': 'Invalid credentials'}), 401
         
     access_token = create_access_token(identity=str(user.id))
+    refresh_token = create_refresh_token(identity=str(user.id))
     return jsonify({
         'access_token': access_token,
+        'refresh_token': refresh_token,
         'user': user.to_dict()
     }), 200
+
+@bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    return jsonify({'access_token': access_token}), 200
 
 @bp.route('/forgot-password', methods=['POST'])
 def forgot_password():

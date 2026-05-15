@@ -5,31 +5,32 @@ import {
   TrendingUp, BarChart3, ArrowUpRight
 } from 'lucide-react';
 import { AdminStats } from '@/api/entities';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const StatCard = ({ icon: Icon, label, value, color, delay, suffix = '' }) => (
   <motion.div
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.4 }}
-    className="glass-strong p-7 rounded-[32px] border border-white/60 shadow-xl flex flex-col gap-5 relative overflow-hidden group hover:shadow-2xl transition-all"
+    className="glass-strong p-4 sm:p-7 rounded-[24px] sm:rounded-[32px] border border-white/60 shadow-xl flex flex-col gap-3 sm:gap-5 relative overflow-hidden group hover:shadow-2xl transition-all"
   >
     {/* Background glow */}
     <div className={`absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-10 blur-2xl ${color}`} />
 
     <div className="flex items-start justify-between">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color} bg-opacity-10`}>
-        <Icon size={24} className="text-current opacity-80" />
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center ${color} bg-opacity-10`}>
+        <Icon size={20} className="sm:w-6 sm:h-6 text-current opacity-80" />
       </div>
-      <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-50 px-2 py-1 rounded-full">
+      <span className="hidden sm:flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-50 px-2 py-1 rounded-full">
         <ArrowUpRight size={10} /> Live
       </span>
     </div>
 
     <div>
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-5xl font-black text-slate-900 tabular-nums">
+      <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate">{label}</p>
+      <p className="text-2xl sm:text-5xl font-black text-slate-900 tabular-nums">
         {value !== null ? value.toLocaleString() : '—'}
-        {suffix && <span className="text-2xl text-slate-300 ml-1">{suffix}</span>}
+        {suffix && <span className="text-xs sm:text-2xl text-slate-300 ml-1">{suffix}</span>}
       </p>
     </div>
   </motion.div>
@@ -90,11 +91,9 @@ export default function AdminAnalytics() {
 
         {/* Metric Cards */}
         {loading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-          </div>
+          <LoadingScreen />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
             <StatCard
               icon={Users}
               label="Total Registered Users"
@@ -111,19 +110,19 @@ export default function AdminAnalytics() {
             />
             <StatCard
               icon={ShoppingBag}
-              label="Total Products Ordered"
+              label="Total Orders Placed"
               value={stats?.total_ordered ?? null}
               color="bg-amber-500 text-amber-500"
               delay={0.2}
-              suffix="units"
+              suffix="orders"
             />
             <StatCard
               icon={CheckCircle2}
-              label="Orders Completed"
+              label="Orders Delivered"
               value={stats?.total_completed ?? null}
               color="bg-emerald-500 text-emerald-500"
               delay={0.3}
-              suffix="units"
+              suffix="orders"
             />
           </div>
         )}
@@ -157,8 +156,8 @@ export default function AdminAnalytics() {
             </div>
 
             <div className="flex justify-between mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
-              <span>{stats.total_completed} completed</span>
-              <span>{stats.total_ordered} total ordered</span>
+              <span>{stats.total_completed} delivered</span>
+              <span>{stats.total_ordered} total orders</span>
             </div>
           </motion.div>
         )}
